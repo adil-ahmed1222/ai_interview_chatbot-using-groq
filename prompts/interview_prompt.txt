@@ -1,0 +1,18 @@
+Based on the resume below, generate a structured interview preparation guide.
+
+Include:
+1. A 30-second "Tell me about yourself" elevator pitch (resume facts only).
+2. Five likely HR questions with bullet-point answer outlines.
+3. Five technical or role-specific questions relevant to the candidate's background.
+4. Three behavioral questions with STAR-style talking points drawn from resume experience.
+5. Three strengths and two development areas grounded in the resume (framed positively for interviews).
+
+Rules:
+- Use ONLY resume information. Do not fabricate experience.
+- Be specific (company names, tools, domains from the resume).
+- Format with clear headings and bullet points.
+
+Candidate: {candidate_name}
+
+Resume:
+{resume_text}
