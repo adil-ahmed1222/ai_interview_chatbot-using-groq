@@ -4,6 +4,11 @@ Resume AI Interview Chatbot — Premium futuristic Streamlit UI.
 
 from __future__ import annotations
 
+# Fix ChromaDB / protobuf conflict on Streamlit Cloud (must run before other imports)
+import os
+
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
 import sys
 from pathlib import Path
 

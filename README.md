@@ -145,27 +145,66 @@ git push -u origin main
 
 > **Never commit `.env`** — it is listed in `.gitignore`. Use Streamlit Cloud secrets for deployment.
 
-## Deploy on Streamlit Cloud
+## Deployment
 
-1. Push your repo to GitHub (without `.env`)
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. **New app** → select repo → main file: `app.py`
-4. Under **Secrets**, add:
+### Do not use Vercel for this project
+
+If you see:
+
+```text
+Error: Found app.py but it does not define a top-level "app" Flask instance.
+```
+
+That is expected. [Vercel](https://vercel.com/docs/frameworks/backend/flask) treats `app.py` as a **Flask** backend. This repo is a **Streamlit** app (long-running Python server + WebSockets), which Vercel serverless does **not** support.
+
+| Platform | Works? | Why |
+|----------|--------|-----|
+| **Streamlit Cloud** | Yes | Built for Streamlit |
+| **Render** | Yes | Long-running web service (`render.yaml` included) |
+| **Railway / Fly.io / Docker** | Yes | Use included `Dockerfile` |
+| **Vercel** | No | Serverless Flask/Next.js — not Streamlit |
+
+---
+
+### Option A — Streamlit Cloud (recommended)
+
+1. Repo: [ai_interview_chatbot-using-groq](https://github.com/adil-ahmed1222/ai_interview_chatbot-using-groq)
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **Create app**
+3. Repository: `adil-ahmed1222/ai_interview_chatbot-using-groq`
+4. Branch: `main` · Main file path: **`app.py`**
+5. **Advanced settings → Secrets**:
 
 ```toml
 GROQ_API_KEY = "your_groq_api_key"
-GROQ_MODEL = "llama3-70b-8192"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 CHROMA_PERSIST_DIR = "vector_db/chroma_db"
 CHUNK_SIZE = "1000"
 CHUNK_OVERLAP = "150"
 ```
 
-5. Deploy — allow extra time for first build (sentence-transformers + Chroma)
+6. Deploy (first build may take 5–10 min for embeddings).
 
-### Optional: `packages.txt` for Streamlit Cloud
+---
 
-If builds fail on memory, add a `packages.txt` with system libs as needed, or use `requirements.txt` pins.
+### Option B — Render
+
+1. [render.com](https://render.com) → **New** → **Blueprint**
+2. Connect GitHub repo `ai_interview_chatbot-using-groq`
+3. Render reads `render.yaml` automatically
+4. Add environment variable **`GROQ_API_KEY`** in the dashboard
+5. Deploy → open the generated `.onrender.com` URL
+
+---
+
+### Option C — Docker (Railway, Fly.io, etc.)
+
+```bash
+docker build -t interview-chatbot .
+docker run -p 8501:8501 -e GROQ_API_KEY=your_key interview-chatbot
+```
+
+Open `http://localhost:8501`
 
 ## Security
 
@@ -181,6 +220,8 @@ If builds fail on memory, add a `packages.txt` with system libs as needed, or us
 | Model decommissioned | Set `GROQ_MODEL=llama-3.3-70b-versatile` |
 | Empty PDF text | Use text-based PDF, not scanned images |
 | Slow first question | Embedding model loads on first resume index |
+| Vercel: Flask `app` error | Use Streamlit Cloud or Render — Vercel does not run Streamlit |
+| Protobuf / Descriptors error on Index Resume | Use Python **3.12** on Streamlit Cloud; pull latest `requirements.txt` |
 | Chroma errors | Delete `vector_db/chroma_db/` and re-upload resume |
 
 ## Tech Stack

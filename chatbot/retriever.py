@@ -1,7 +1,10 @@
 """Chroma vector store and retriever for resume RAG."""
 
-import logging
 import os
+
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
+import logging
 import shutil
 from pathlib import Path
 from typing import Optional
