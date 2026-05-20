@@ -48,7 +48,7 @@ ensure_directories()
 
 st.set_page_config(
     page_title="InterviewCoach AI",
-    page_icon="✦",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -190,7 +190,8 @@ def render_suggestions() -> None:
 def render_chat_history() -> None:
     st.markdown('<div class="chat-area">', unsafe_allow_html=True)
     for msg in st.session_state.messages:
-        avatar = "🧑‍💼" if msg["role"] == "user" else "✦"
+        # Streamlit Cloud only accepts single standard emojis as avatars (not ✦ or ZWJ sequences)
+        avatar = "🧑" if msg["role"] == "user" else "🤖"
         with st.chat_message(msg["role"], avatar=avatar):
             st.markdown(msg["content"])
     st.markdown("</div>", unsafe_allow_html=True)
@@ -200,7 +201,7 @@ def stream_assistant_response(question: str) -> str:
     manager = get_chain_manager()
     history = get_chat_history_tuples(st.session_state.messages[:-1])
 
-    with st.chat_message("assistant", avatar="✦"):
+    with st.chat_message("assistant", avatar="🤖"):
         placeholder = st.empty()
         placeholder.markdown(render_typing_indicator(), unsafe_allow_html=True)
         full_response = ""
