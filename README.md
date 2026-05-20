@@ -180,6 +180,7 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 # CHROMA_PERSIST_DIR optional — omit on Streamlit Cloud (uses in-memory automatically)
 CHROMA_USE_MEMORY = "true"
+# On Streamlit Cloud, FAISS in-memory is used automatically (no Chroma SQLite errors)
 CHUNK_SIZE = "1000"
 CHUNK_OVERLAP = "150"
 ```
@@ -223,6 +224,7 @@ Open `http://localhost:8501`
 | Slow first question | Embedding model loads on first resume index |
 | Vercel: Flask `app` error | Use Streamlit Cloud or Render — Vercel does not run Streamlit |
 | Protobuf / Descriptors error on Index Resume | Use Python **3.12** on Streamlit Cloud; pull latest `requirements.txt` |
+| Chroma `no such table: tenants` | Pull latest code — Streamlit Cloud uses FAISS in-memory automatically |
 | Chroma errors | Delete `vector_db/chroma_db/` and re-upload resume |
 
 ## Tech Stack
