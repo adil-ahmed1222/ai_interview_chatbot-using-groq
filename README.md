@@ -178,7 +178,8 @@ That is expected. [Vercel](https://vercel.com/docs/frameworks/backend/flask) tre
 GROQ_API_KEY = "your_groq_api_key"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-CHROMA_PERSIST_DIR = "vector_db/chroma_db"
+# CHROMA_PERSIST_DIR optional — omit on Streamlit Cloud (uses in-memory automatically)
+CHROMA_USE_MEMORY = "true"
 CHUNK_SIZE = "1000"
 CHUNK_OVERLAP = "150"
 ```

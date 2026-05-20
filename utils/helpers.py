@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -10,9 +11,39 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-UPLOADS_DIR = PROJECT_ROOT / "uploads"
-CHAT_HISTORY_DIR = PROJECT_ROOT / "data" / "chat_history"
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
+RUNTIME_TMP = Path(os.environ.get("TMPDIR", "/tmp")) / "ai_interview_chatbot"
+
+
+def _path_is_writable(path: Path) -> bool:
+    """Return True if we can create and write a probe file in path."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        probe = path / ".write_probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return True
+    except OSError:
+        return False
+
+
+def get_runtime_dir(subdir: str) -> Path:
+    """
+    Writable folder for uploads/cache.
+    Streamlit Cloud mounts /mount/src as read-only — falls back to /tmp.
+    """
+    for candidate in (PROJECT_ROOT / subdir, RUNTIME_TMP / subdir):
+        if _path_is_writable(candidate):
+            return candidate
+    raise OSError(f"No writable directory available for '{subdir}'")
+
+
+def get_uploads_dir() -> Path:
+    return get_runtime_dir("uploads")
+
+
+def get_chat_history_dir() -> Path:
+    return get_runtime_dir("data" / "chat_history")
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -25,17 +56,17 @@ def setup_logging(level: int = logging.INFO) -> None:
 
 
 def ensure_directories() -> None:
-    """Create required runtime directories."""
-    for path in (UPLOADS_DIR, CHAT_HISTORY_DIR, PROJECT_ROOT / "vector_db" / "chroma_db"):
-        path.mkdir(parents=True, exist_ok=True)
+    """Create required runtime directories (writable paths only)."""
+    get_uploads_dir()
+    get_chat_history_dir()
 
 
 def save_uploaded_file(filename: str, content: bytes) -> Path:
-    """Persist uploaded resume to uploads/ with timestamp prefix."""
-    ensure_directories()
+    """Persist uploaded resume to a writable uploads folder."""
+    uploads = get_uploads_dir()
     safe_name = re.sub(r"[^\w.\-]", "_", filename)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    dest = UPLOADS_DIR / f"{timestamp}_{safe_name}"
+    dest = uploads / f"{timestamp}_{safe_name}"
     dest.write_bytes(content)
     logger.info("Saved resume to %s", dest)
     return dest
@@ -98,7 +129,7 @@ def save_chat_history_json(messages: list[dict[str, Any]], candidate_name: str) 
     ensure_directories()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_name = re.sub(r"[^\w\-]", "_", candidate_name)
-    path = CHAT_HISTORY_DIR / f"chat_{safe_name}_{timestamp}.json"
+    path = get_chat_history_dir() / f"chat_{safe_name}_{timestamp}.json"
     payload = {
         "candidate": candidate_name,
         "exported_at": datetime.now().isoformat(),
