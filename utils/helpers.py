@@ -27,12 +27,13 @@ def _path_is_writable(path: Path) -> bool:
         return False
 
 
-def get_runtime_dir(subdir: str) -> Path:
+def get_runtime_dir(subdir: str | Path) -> Path:
     """
     Writable folder for uploads/cache.
     Streamlit Cloud mounts /mount/src as read-only — falls back to /tmp.
     """
-    for candidate in (PROJECT_ROOT / subdir, RUNTIME_TMP / subdir):
+    rel = Path(subdir)
+    for candidate in (PROJECT_ROOT / rel, RUNTIME_TMP / rel):
         if _path_is_writable(candidate):
             return candidate
     raise OSError(f"No writable directory available for '{subdir}'")
@@ -43,7 +44,7 @@ def get_uploads_dir() -> Path:
 
 
 def get_chat_history_dir() -> Path:
-    return get_runtime_dir("data" / "chat_history")
+    return get_runtime_dir("data/chat_history")
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -56,9 +57,15 @@ def setup_logging(level: int = logging.INFO) -> None:
 
 
 def ensure_directories() -> None:
-    """Create required runtime directories (writable paths only)."""
-    get_uploads_dir()
-    get_chat_history_dir()
+    """Create writable runtime directories (never crash app startup)."""
+    for name, getter in (
+        ("uploads", get_uploads_dir),
+        ("chat_history", get_chat_history_dir),
+    ):
+        try:
+            getter()
+        except OSError as exc:
+            logger.warning("Could not prepare %s directory: %s", name, exc)
 
 
 def save_uploaded_file(filename: str, content: bytes) -> Path:
